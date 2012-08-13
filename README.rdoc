@@ -23,7 +23,7 @@ to /Library/StartupItems/ then start it like this:
 == TODO
 
 * Work with mongodb configuration files
-* Handle replication/sharding (maybe)
+* Handle replication (maybe)
 
 
 == Copyright and License

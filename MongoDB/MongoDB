@@ -10,31 +10,72 @@ test -r /etc/rc.common || exit 1
 . /etc/rc.common
 
 # Set up some defaults
-DBPATH='/usr/local/mongodb/db'
-LOGPATH='/usr/local/mongodb/log/mongod.log'
-MONGOD_PORT=27017
+
+#
+# SHARD A
+#
+A_DBPATH='/usr/local/mongodb/db/a'
+A_LOGPATH='/usr/local/mongodb/log/a.log'
+A_MONGOD_PORT=10000
+
+#
+# SHARD B
+#
+B_DBPATH='/usr/local/mongodb/db/b'
+B_LOGPATH='/usr/local/mongodb/log/b.log'
+B_MONGOD_PORT=10001
+
+#
+# CONFIG SERVER
+#
+CNF_DBPATH='/usr/local/mongodb/db/config'
+CNF_LOGPATH='/usr/local/mongodb/log/config.log'
+CNF_MONGOD_PORT=20000
+
+#
+# ROUTING SERVER
+#
+RTN_DBPATH='/usr/local/mongodb/db/routing'
+RTN_LOGPATH='/usr/local/mongodb/log/routing.log'
+RTN_MONGOD_PORT=27017
 
 StartService(){
-	/usr/local/mongodb/bin/mongod run --dbpath=$DBPATH --logpath=$LOGPATH --port $MONGOD_PORT > /dev/null 2>&1 &
+	/usr/local/mongodb/bin/mongod --rest --shardsvr --dbpath $A_DBPATH --logpath $A_LOGPATH --port $A_MONGOD_PORT > /dev/null 2>&1 &
+	/usr/local/mongodb/bin/mongod --rest --shardsvr --dbpath $B_DBPATH --logpath $B_LOGPATH --port $B_MONGOD_PORT > /dev/null 2>&1 &
+	sleep 2
+	/usr/local/mongodb/bin/mongod --rest --configsvr --dbpath $CNF_DBPATH --logpath $CNF_LOGPATH --port $CNF_MONGOD_PORT > /dev/null 2>&1 &
+	sleep 2
+	/usr/local/mongodb/bin/mongos --configdb localhost:$CNF_MONGOD_PORT --pidfilepath $RTN_DBPATH/mongod.lock --logpath $RTN_LOGPATH --port $RTN_MONGOD_PORT > /dev/null 2>&1 &
 }
 
-StopService() {
-	pidfile=$DBPATH/mongod.lock
-	
+#
+# DBPATH PORT
+#
+_StopService() {
+	pid=
+	pidfile=$1/mongod.lock
+
 	# If the lockfile exists, it contains the PID
 	if [ -e $pidfile ]; then
 		pid=`cat $pidfile`
 	fi
-	
+
 	# If we don't have a PID, check for it
 	if [ "$pid" == "" ]; then
-		pid=`/usr/sbin/lsof -i tcp:$MONGOD_PORT | tail -1 | awk '{print $2}'`
+		pid=`/usr/sbin/lsof -i tcp:$2 | tail -1 | awk '{print $2}'`
 	fi
 
 	# If we've found a PID, let's kill it
 	if [ "$pid" != "" ]; then
 		kill -15 $pid
 	fi
+}
+
+StopService() {
+	_StopService $RTN_DBPATH $RTN_MONGOD_PORT
+	_StopService $CNF_DBPATH $CNF_MONGOD_PORT
+	_StopService $B_DBPATH $B_MONGOD_PORT
+	_StopService $A_DBPATH $A_MONGOD_PORT
 }
 
 RestartService() {
