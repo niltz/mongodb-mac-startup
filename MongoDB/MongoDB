@@ -11,45 +11,47 @@ test -r /etc/rc.common || exit 1
 
 # Set up some defaults
 
+BASE_DIR='/usr/local/mongodb'
+
 #
 # SHARD A
 #
-A_DBPATH='/usr/local/mongodb/db/a'
-A_LOGPATH='/usr/local/mongodb/log/a.log'
-A_MONGOD_PORT=10000
+A_DATA="${BASE_DIR}/db/a"
+A_LOG="${BASE_DIR}/log/a.log"
+A_PORT=10000
 
 #
 # SHARD B
 #
-B_DBPATH='/usr/local/mongodb/db/b'
-B_LOGPATH='/usr/local/mongodb/log/b.log'
-B_MONGOD_PORT=10001
+B_DATA="${BASE_DIR}/db/b"
+B_LOG="${BASE_DIR}/log/b.log"
+B_PORT=10001
 
 #
 # CONFIG SERVER
 #
-CNF_DBPATH='/usr/local/mongodb/db/config'
-CNF_LOGPATH='/usr/local/mongodb/log/config.log'
-CNF_MONGOD_PORT=20000
+CNF_DATA="${BASE_DIR}/db/config"
+CNF_LOG="${BASE_DIR}/log/config.log"
+CNF_PORT=20000
 
 #
 # ROUTING SERVER
 #
-RTN_DBPATH='/usr/local/mongodb/db/routing'
-RTN_LOGPATH='/usr/local/mongodb/log/routing.log'
-RTN_MONGOD_PORT=27017
+RTN_DATA="${BASE_DIR}/db/routing"
+RTN_LOG="${BASE_DIR}/log/routing.log"
+RTN_PORT=27017
 
 StartService(){
-	/usr/local/mongodb/bin/mongod --rest --shardsvr --dbpath $A_DBPATH --logpath $A_LOGPATH --port $A_MONGOD_PORT > /dev/null 2>&1 &
-	/usr/local/mongodb/bin/mongod --rest --shardsvr --dbpath $B_DBPATH --logpath $B_LOGPATH --port $B_MONGOD_PORT > /dev/null 2>&1 &
+	${BASE_DIR}/bin/mongod --rest --shardsvr --dbpath $A_DATA --logpath $A_LOG --port $A_PORT > /dev/null 2>&1 &
+	${BASE_DIR}/bin/mongod --rest --shardsvr --dbpath $B_DATA --logpath $B_LOG --port $B_PORT > /dev/null 2>&1 &
 	sleep 2
-	/usr/local/mongodb/bin/mongod --rest --configsvr --dbpath $CNF_DBPATH --logpath $CNF_LOGPATH --port $CNF_MONGOD_PORT > /dev/null 2>&1 &
+	${BASE_DIR}/bin/mongod --rest --configsvr --dbpath $CNF_DATA --logpath $CNF_LOG --port $CNF_PORT > /dev/null 2>&1 &
 	sleep 2
-	/usr/local/mongodb/bin/mongos --configdb localhost:$CNF_MONGOD_PORT --pidfilepath $RTN_DBPATH/mongod.lock --logpath $RTN_LOGPATH --port $RTN_MONGOD_PORT > /dev/null 2>&1 &
+	${BASE_DIR}/bin/mongos --configdb localhost:$CNF_PORT --pidfilepath $RTN_DATA/mongod.lock --logpath $RTN_LOG --port $RTN_PORT > /dev/null 2>&1 &
 }
 
 #
-# DBPATH PORT
+# DATA PORT
 #
 _StopService() {
 	pid=
@@ -72,10 +74,10 @@ _StopService() {
 }
 
 StopService() {
-	_StopService $RTN_DBPATH $RTN_MONGOD_PORT
-	_StopService $CNF_DBPATH $CNF_MONGOD_PORT
-	_StopService $B_DBPATH $B_MONGOD_PORT
-	_StopService $A_DBPATH $A_MONGOD_PORT
+	_StopService $RTN_DATA $RTN_PORT
+	_StopService $CNF_DATA $CNF_PORT
+	_StopService $B_DATA $B_PORT
+	_StopService $A_DATA $A_PORT
 }
 
 RestartService() {

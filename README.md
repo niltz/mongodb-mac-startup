@@ -1,35 +1,45 @@
-= MongoDB Startup Scripts for OS X
+# MongoDB Startup Scripts for OS X
 
-This is a very basic, single-instance startup script for running MongoDB on Mac OS X.
+This is a very basic, single-instance startup script for running MongoDB on Mac OS X
+with multiple shards.
+
 It is intended to run the defaults and without any authentication, but remain easy to
 modify to suit your needs. Feel free to fork to add features.
 
-
-== Dependencies
+## Dependencies
 
 Make sure to install MongoDB from here:
 
   http://www.mongodb.org/display/DOCS/Downloads
+  
+The script assumes you have installed mongodb to
 
+	/usr/local/mongodb
+	
+You might also need to create the following folders
 
-== Running
+	/usr/local/mongodb/log
+	/usr/local/mongodb/db/a
+	/usr/local/mongodb/db/b
+	/usr/local/mongodb/db/config
+	/usr/local/mongodb/db/routing
+
+## Running
 
 Using sudo or as root, copy the MongoDB directory and all its contents 
 to /Library/StartupItems/ then start it like this:
 
-  sudo /Library/StartupItems/MongoDB/MongoDB start
+	sudo /Library/StartupItems/MongoDB/MongoDB start
 
-
-== TODO
+## TODO
 
 * Work with mongodb configuration files
 * Handle replication (maybe)
 
+## Copyright and License
 
-== Copyright and License
-
-MongoDB Startup Scripts for OS X
-Copyright (C) 2009 Tim Gourley.
+MongoDB Startup Script for OS X
+Copyright (C) 2012 Jeff Sawatzky
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
