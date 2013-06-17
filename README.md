@@ -1,7 +1,6 @@
 # MongoDB Startup Scripts for OS X
 
-This is a very basic, single-instance startup script for running MongoDB on Mac OS X
-with multiple shards.
+This is a very basic startup script for running MongoDB on Mac OS X with multiple shards.
 
 It is intended to run the defaults and without any authentication, but remain easy to
 modify to suit your needs. Feel free to fork to add features.
@@ -16,7 +15,7 @@ The script assumes you have installed mongodb to
 
 	/usr/local/mongodb
 	
-You might also need to create the following folders
+You will also need to create the following folders
 
 	/usr/local/mongodb/log
 	/usr/local/mongodb/db/a
@@ -30,6 +29,30 @@ Using sudo or as root, copy the MongoDB directory and all its contents
 to /Library/StartupItems/ then start it like this:
 
 	sudo /Library/StartupItems/MongoDB/MongoDB start
+	
+## Setup
+
+Once mongo is running, you will need to connect to the mongos instance and configure the shards:
+
+    $ mongo
+    mongos> sh.addShard("localhost:10000");
+    mongos> sh.addShard("localhost:10001");
+    
+You should only need to do this once. Now everything should be configured and working. However, by default, new
+databases/collections are not sharded and will only exist on the first shard. To enable sharding for a
+database/collection you need to do the following:
+
+    mongos> sh.enableSharding("<database>");
+
+This enables sharding for the database, but no sharding is performed
+
+    mongos> sh.shardCollection("<database>.<collection>", shard-key-pattern);
+
+A simple shard-key-pattern is { "_id": 1 }. This will now enable sharding on the collection using the shard key.
+    
+For more information see:
+
+   http://docs.mongodb.org/manual/tutorial/deploy-shard-cluster/
 
 ## TODO
 
